@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Campus Redesign - Performance Task</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* ==========================================================================
+           CSS Variables & Theming
+           ========================================================================== */
+        :root {
+            /* Base variables */
+            --text-scale: 1;
+            --transition-speed: 0.3s;
+            --border-radius: 16px;
+            
+            /* Light Theme Colors */
+            --bg-body: #f1f5f9;
+            --bg-slide: #ffffff;
+            --bg-overlay: rgba(255, 255, 255, 0.85);
+            --text-main: #1e293b;
+            --text-muted: #475569; /* Darkened slightly for readability */
+            --accent-primary: #4f46e5; /* Indigo */
+            --accent-hover: #4338ca;
+            --accent-secondary: #0ea5e9; /* Sky blue */
+            --border-color: #e2e8f0;
+            --card-bg: #f8fafc;
+            --callout-bg: #e0e7ff;
+            --callout-border: #4f46e5;
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --glass-border: rgba(255, 255, 255, 0.5);
+        }
+
+        [data-theme="dark"] {
+            /* Dark Theme Colors */
+            --bg-body: #020617; /* Very deep slate */
+            --bg-slide: #0f172a;
+            --bg-overlay: rgba(15, 23, 42, 0.85);
+            --text-main: #f8fafc;
+            --text-muted: #cbd5e1;
+            --accent-primary: #6366f1;
+            --accent-hover: #818cf8;
+            --accent-secondary: #38bdf8;
+            --border-color: #1e293b;
+            --card-bg: #1e293b;
+            --callout-bg: #1e293b;
+            --callout-border: #6366f1;
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        /* ==========================================================================
+           Global Resets & Base Styles
+           ========================================================================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            font-size: calc(16px * var(--text-scale));
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            overflow: hidden; /* Prevent body scroll, handle inside slides */
+            transition: background-color var(--transition-speed), color var(--transition-speed);
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Poppins', sans-serif;
+            color: var(--text-main);
+            line-height: 1.2;
+            margin-bottom: 1rem;
+        }
+
+        p, li {
+            line-height: 1.6;
+            margin-bottom: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; }
+        
+        li ul { margin-top: 0.5rem; }
+
+        /* ==========================================================================
+           Layout Container
+           ========================================================================== */
+        #app {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Top Progress Bar */
+        .progress-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--border-color);
+            z-index: 100;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            width: 0%;
+            transition: width 0.4s ease-out;
+        }
+
+        /* Top UI Controls */
+        .top-ui {
+            position: fixed;
+            top: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 95%;
+            max-width: 1200px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-overlay);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            box-shadow: var(--shadow-sm);
+            z-index: 50;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        .ui-hidden .top-ui {
+            opacity: 0;
+            transform: translate(-50%, -20px);
+            pointer-events: none;
+        }
+
+        .header-title {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--accent-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .controls-group {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .icon-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .icon-btn:hover {
+            background: var(--border-color);
+            color: var(--accent-primary);
+            transform: scale(1.1);
+        }
+
+        /* Text Size Popover */
+        .text-size-container {
+            position: relative;
+        }
+
+        .text-size-popover {
+            position: absolute;
+            top: 130%;
+            right: 0;
+            background: var(--bg-slide);
+            border: 1px solid var(--border-color);
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            display: none;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-width: 150px;
+            z-index: 60;
+        }
+
+        .text-size-container:hover .text-size-popover,
+        .text-size-container:focus-within .text-size-popover {
+            display: flex;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .text-size-popover label {
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        /* Slide Container */
+        .presentation-area {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5rem 1rem 4rem 1rem; /* Space for top/bottom UI */
+        }
+
+        .slide-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 1100px;
+            height: 100%;
+            max-height: 800px;
+            background: var(--bg-slide);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            display: flex;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 3rem 4rem;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(20px);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            overflow-y: auto; /* Allow scrolling inside long slides */
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(0);
+        }
+
+        /* Custom Scrollbar for Slides */
+        .slide::-webkit-scrollbar { width: 8px; }
+        .slide::-webkit-scrollbar-track { background: transparent; }
+        .slide::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        .slide::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+        /* Bottom Navigation Controls */
+        .bottom-ui {
+            position: fixed;
+            bottom: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            background: var(--bg-overlay);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow-sm);
+            z-index: 50;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        .ui-hidden .bottom-ui {
+            opacity: 0;
+            transform: translate(-50%, 20px);
+            pointer-events: none;
+        }
+
+        .nav-btn {
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .nav-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+
+        .nav-btn:disabled {
+            background: var(--text-muted);
+            cursor: not-allowed;
+            transform: none;
+            opacity: 0.5;
+        }
+
+        .page-counter {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            color: var(--text-main);
+            min-width: 60px;
+            text-align: center;
+        }
+
+        /* ==========================================================================
+           Sidebar Menu (Table of Contents)
+           ========================================================================== */
+        .menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 100;
+            transition: opacity 0.3s ease;
+        }
+
+        .menu-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -350px;
+            width: 350px;
+            max-width: 80vw;
+            height: 100vh;
+            background: var(--bg-slide);
+            box-shadow: -5px 0 25px rgba(0,0,0,0.1);
+            z-index: 101;
+            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.active { right: 0; }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-content {
+            padding: 1rem 0;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+        .toc-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .toc-item {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            border-left: 4px solid transparent;
+            transition: all 0.2s;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .toc-item:hover {
+            background: var(--card-bg);
+            color: var(--accent-primary);
+        }
+
+        .toc-item.active {
+            border-left-color: var(--accent-primary);
+            background: var(--callout-bg);
+            color: var(--accent-primary);
+            font-weight: 600;
+        }
+
+        /* ==========================================================================
+           Slide Formatting Components (Cards, Callouts, Tables)
+           ========================================================================== */
+        .title-slide {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            height: 100%;
+        }
+
+        .title-slide h1 {
+            font-size: 2.8em;
+            color: var(--accent-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .title-slide h2 {
+            font-size: 1.4em;
+            color: var(--text-main);
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+        }
+
+        .badge {
+            background: var(--callout-bg);
+            color: var(--accent-primary);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9em;
+            margin-bottom: 1rem;
+            display: inline-block;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .callout {
+            background: var(--callout-bg);
+            border-left: 5px solid var(--callout-border);
+            padding: 1.5rem;
+            border-radius: 0 12px 12px 0;
+            margin: 1.5rem 0;
+        }
+
+        .callout strong {
+            color: var(--text-main);
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 1.1em;
+        }
+
+        /* Responsive Tables */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            table-layout: fixed;
+            min-width: 800px;
+        }
+
+        th, td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: top;
+            font-size: 0.9em;
+        }
+
+        th {
+            background: var(--card-bg);
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        tr:last-child td { border-bottom: none; }
+        
+        .rubric-pts { color: var(--accent-primary); font-weight: bold; text-align: center; }
+
+        /* ==========================================================================
+           Media Queries
+           ========================================================================== */
+        @media (max-width: 768px) {
+            .presentation-area { padding: 4rem 0 0 0; }
+            .slide-wrapper { border-radius: 0; border-left: none; border-right: none; height: calc(100vh - 4rem); max-height: none;}
+            .slide { padding: 2rem 1.5rem 6rem 1.5rem; }
+            .grid-2 { grid-template-columns: 1fr; gap: 1rem; }
+            .title-slide h1 { font-size: 2.2em; }
+            .top-ui { width: 100%; top: 0; border-radius: 0; border-top: none; border-left:none; border-right:none;}
+            .bottom-ui { width: 100%; bottom: 0; border-radius: 0; border-bottom: none; border-left:none; border-right:none; justify-content: space-between;}
+            .header-title span { display: none; }
+        }
+
+        /* Animation Keyframes */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Progress Bar -->
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <!-- Main Application Container -->
+    <div id="app">
+        
+        <!-- Top UI Controls -->
+        <header class="top-ui">
+            <div class="header-title">
+                <i class="fa-solid fa-compass-drafting"></i>
+                <span>Campus Redesign</span>
+            </div>
+            <div class="controls-group no-click">
+                <!-- Text Scaler -->
+                <div class="text-size-container">
+                    <button class="icon-btn" title="Adjust Text Size" aria-label="Text Size">
+                        <i class="fa-solid fa-text-height"></i>
+                    </button>
+                    <div class="text-size-popover">
+                        <label for="fontSlider">Text Scale</label>
+                        <input type="range" id="fontSlider" min="0.8" max="1.5" step="0.1" value="1">
+                    </div>
+                </div>
+                <!-- Theme Toggle -->
+                <button class="icon-btn" id="themeToggle" title="Toggle Dark Mode" aria-label="Dark Mode">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+                <!-- Menu Toggle -->
+                <button class="icon-btn" id="menuToggle" title="Table of Contents" aria-label="Menu">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Sidebar Menu Overlay -->
+        <div class="menu-overlay" id="menuOverlay"></div>
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h3>Contents</h3>
+                <button class="icon-btn" id="closeMenu">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="sidebar-content">
+                <ul class="toc-list" id="tocList">
+                    <!-- JS Populates this -->
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Presentation Area -->
+        <main class="presentation-area">
+            <div class="slide-wrapper" id="slideWrapper">
+                
+                <!-- SLIDE 1: Title -->
+                <section class="slide active" data-title="Title">
+                    <div class="title-slide">
+                        <span class="badge">MATHEMATICS 9 • Term 1 - Unit 1, S.Y. 2026-2027</span>
+                        <h1>Geometry in Action</h1>
+                        <h2>Designing a Smarter Campus Space</h2>
+                        <div class="card" style="max-width: 600px; text-align: center; margin-top: 1.5rem; width: 100%;">
+                            <ul style="list-style-type: none; margin:0; display:flex; justify-content: space-around; padding: 0;">
+                                <li><i class="fa-solid fa-users text-muted"></i> <strong>Group Size:</strong> 3-4 members</li>
+                                <li><i class="fa-solid fa-star text-muted"></i> <strong>Total Points:</strong> 50 points per student</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SLIDE 2: Driving Question -->
+                <section class="slide" data-title="Driving Question">
+                    <div class="title-slide">
+                        <h2><i class="fa-solid fa-circle-question text-muted"></i> Driving Question</h2>
+                        <div class="card" style="max-width: 800px; text-align: center; margin-top: 1rem; padding: 3rem 2rem;">
+                            <p style="font-size: 1.5em; font-weight: 500; font-family: 'Poppins', sans-serif; color: var(--accent-primary); line-height: 1.6; margin: 0;">
+                                "Beyond aesthetics, how can the strategic language of geometry solve the unseen problems in our everyday school environment?"
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SLIDE 3: G.R.A.S. Framework -->
+                <section class="slide" data-title="Project Overview (GRASPS)">
+                    <h2>Project Overview (GRASPS Framework)</h2>
+                    <div class="grid-2">
+                        <div class="card" style="grid-column: 1 / -1;">
+                            <h3><i class="fa-solid fa-bullseye text-muted"></i> Goal</h3>
+                            <p>To produce a professional report that proposes a redesigned campus space using the geometric concepts learned in Unit 1. The report will include a drawing/design layout, geometric constructions, mathematical justifications or reasoning, and a proof.</p>
+                        </div>
+                        <div class="card">
+                            <h3><i class="fa-solid fa-user-tie text-muted"></i> Role</h3>
+                            <p>You will act as a <strong>Junior Campus Planner</strong>.</p>
+                        </div>
+                        <div class="card">
+                            <h3><i class="fa-solid fa-users-viewfinder text-muted"></i> Audience</h3>
+                            <p>Your target audience is the <strong>School Administration</strong>.</p>
+                        </div>
+                        <div class="card" style="grid-column: 1 / -1;">
+                            <h3><i class="fa-solid fa-map-location-dot text-muted"></i> Situation</h3>
+                            <p>Welcome, junior campus planners! Your group has been selected by the school administration to help improve and beautify a designated area within the campus. Using the geometric concepts learned in Unit 1, you will create a practical, safe, and visually appealing redesign proposal. This project will allow you to apply geometric constructions, angle relationships, reasoning and proof, and parallel line concepts in an authentic school-based setting.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SLIDE 4: Performance - Steps 1 & 2 -->
+                <section class="slide" data-title="Performance: Planning Steps">
+                    <h2>Performance: Step-by-Step Instructions</h2>
+                    <div class="grid-2">
+                        <div class="card">
+                            <h3><i class="fa-solid fa-magnifying-glass text-muted"></i> 1. Site Inspection and Observation</h3>
+                            <ul>
+                                <li>Once your group is assigned, or you have chosen a specific area on campus, your first task is to visit the site.</li>
+                                <li>Observe existing pathways, open spaces, gardens, benches, trees, buildings, and other features.</li>
+                                <li>Take a picture of the current layout.</li>
+                                <li>Identify areas that can be improved through a geometric redesign.</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3><i class="fa-solid fa-lightbulb text-muted"></i> 2. Planning & Design</h3>
+                            <p>As a group, plan how you want to redesign the space. Consider the following:</p>
+                            <ul>
+                                <li><strong>Function:</strong> What purpose will the redesigned area serve? Examples include:
+                                    <ul>
+                                        <li>A quiet study corner</li>
+                                        <li>An outdoor learning space</li>
+                                        <li>A landscaped garden area</li>
+                                        <li>A safer pedestrian pathway</li>
+                                        <li>A waiting area for students</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Aesthetics:</strong> What geometric arrangements would make the space attractive and organized? Examples include:
+                                    <ul>
+                                        <li>Parallel walkways</li>
+                                        <li>Perpendicular pathways</li>
+                                        <li>Symmetrical garden layouts</li>
+                                        <li>Decorative geometric patterns</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SLIDE 5: Performance - Elements & Requirements -->
+                <section class="slide" data-title="Performance: Elements & Requirements">
+                    <h2>Performance: Elements & Requirements</h2>
+                    
+                    <div class="card" style="margin-bottom: 1.5rem;">
+                        <h3>3. Elements</h3>
+                        <p>Decide what to include in your design. Examples include:</p>
+                        <ul style="column-count: 2; margin-bottom: 0;">
+                            <li>Walkways and pathways</li>
+                            <li>Garden plots</li>
+                            <li>Benches or seating areas</li>
+                            <li>Planter boxes</li>
+                            <li>Signage areas</li>
+                            <li>Open spaces for student activities</li>
+                        </ul>
+                    </div>
+
+                    <div class="callout">
+                        <strong>Design Requirement:</strong>
+                        <p>Your proposed campus redesign must demonstrate the geometric concepts learned in Unit 1. For this project:</p>
+                        <ol style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                            <li>Include at least one pair of <strong>parallel lines</strong> in your design.</li>
+                            <li>Include at least one pair of <strong>perpendicular lines</strong> in your design.</li>
+                            <li>Include at least one <strong>transversal</strong> intersecting a pair of parallel lines.</li>
+                            <li>Label at least <strong>five points</strong> using proper geometric notation.</li>
+                            <li>Identify and label at least <strong>two angle relationships</strong> found in your design.</li>
+                            <li>Clearly indicate the parallel lines, perpendicular lines, transversal, and angle relationships on the visual layout.</li>
+                        </ol>
+                    </div>
+                </section>
+
+                <!-- SLIDE 6: Performance - Visual Layout -->
+                <section class="slide" data-title="Performance: Visual Layout">
+                    <h2>Performance: 3. Creating the Visual Layout</h2>
+                    <p>On a piece of Letter-sized or A4 bond paper, create a neat, colorful, and detailed drawing of your proposed campus redesign. Your visual layout should clearly show how the assigned area will look after the improvements have been implemented.</p>
+                    
+                    <div class="card">
+                        <h3>The drawing must:</h3>
+                        <ul>
+                            <li>Include all proposed features such as pathways, garden areas, benches, planter boxes, signage, open spaces, or other design elements.</li>
+                            <li>Clearly label each section and important feature using proper geometric notation where applicable.</li>
+                            <li>Show the required geometric concepts, including parallel lines, perpendicular lines, a transversal, and identified angle relationships.</li>
+                            <li>Use color, shading, symbols, or patterns to distinguish different areas and improve readability.</li>
+                            <li>Be neat, organized, visually appealing, and easy to understand.</li>
+                        </ul>
+                    </div>
+                    <p style="margin-top: 1rem;"><strong>The visual layout should accurately represent the group's redesign proposal and serve as the primary illustration of how geometric concepts are applied to improve the campus space.</strong></p>
+                </section>
+
+                <!-- SLIDE 7: Performance - Construction -->
+                <section class="slide" data-title="Performance: Construction Analysis">
+                    <h2>Performance: 4. Geometric Construction Analysis</h2>
+                    <p>On a separate sheet of paper, you will perform and present the following mathematical tasks. <strong>You must show your justifications.</strong></p>
+                    
+                    <div class="grid-2">
+                        <div class="card">
+                            <h3>Geometric Construction Analysis</h3>
+                            <p>Demonstrate the construction of one pair of parallel lines, one pair of perpendicular lines, etc., and explain how these constructions were used in the redesign.</p>
+                        </div>
+                        <div class="card">
+                            <h3>Angle Relationships</h3>
+                            <p>Identify and classify the angle pairs found in your design. Examples may include:</p>
+                            <ul style="column-count: 2;">
+                                <li>Complementary Angles</li>
+                                <li>Supplementary Angles</li>
+                                <li>Vertical Angles</li>
+                                <li>Adjacent Angles</li>
+                                <li>Linear Pair Angles</li>
+                                <li>Corresponding Angles</li>
+                                <li>Alternate Interior Angles</li>
+                                <li>Alternate Exterior Angles</li>
+                                <li>Same-Side Interior Angles</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SLIDE 8: Performance - Reasoning and Proof -->
+                <section class="slide" data-title="Performance: Reasoning & Proof">
+                    <h2>Performance: 5. Reasoning and Proof</h2>
+                    <p>Your group must justify why the assigned campus area needs to be redesigned and explain how your proposed design improves the space. Your report must include:</p>
+                    <ol style="margin-left: 2rem;">
+                        <li>A written explanation of the current condition of the area and the problems observed.</li>
+                        <li>A justification for the proposed redesign using geometric concepts learned in Unit 1.</li>
+                        <li>Evidence from observations, measurements, or campus needs that support your proposal.</li>
+                        <li>One mathematical proof supporting a geometric claim found in your design.</li>
+                    </ol>
+                    
+                    <div class="callout">
+                        <strong>Sample Reasoning:</strong>
+                        <p><strong>Claim:</strong> The existing pathway layout causes unnecessary crossing of student traffic during dismissal time.</p>
+                        <p><strong>Evidence:</strong> During observation, students coming from the canteen and classroom building frequently crossed paths, creating congestion in the area.</p>
+                        <p><strong>Justification:</strong> The redesigned pathway uses parallel walkways and a perpendicular connector path to improve movement and reduce congestion. The arrangement provides clearer directions and safer pedestrian flow.</p>
+                        <p><strong>Proof/Support:</strong> The proposed pathway intersects the main walkway at a right angle, creating a clearer and more organized route for pedestrian traffic. Therefore, m&ang;1 = m&ang;2 = m&ang;3 = m&ang;4 = 90&deg;. The layout shows EF &perp; GH, and the measured angles are all 90&deg;, supporting the claim that the pathways form perpendicular lines.</p>
+                        <p><strong>Documentation:</strong> Photo showing students crossing an open area without a designated pathway.</p>
+                    </div>
+                </section>
+
+                <!-- SLIDE 9: Performance - Reflection & Final Assembly -->
+                <section class="slide" data-title="Performance: Reflection & Assembly">
+                    <h2>Performance: 6. Reflection & Final Assembly</h2>
+                    <div class="grid-2">
+                        <div>
+                            <div class="card" style="margin-bottom: 1.5rem;">
+                                <h3>Reflection: I Used to Think... Now I Think...</h3>
+                                <p><strong>Instructions:</strong> At the end of the project, reflect on how your understanding of geometry has changed. Complete the statements below using your own experiences and learning from the Campus Redesign Project using <strong>3 - 5 sentences each</strong>.</p>
+                            </div>
+                            
+                            <div class="callout" style="margin-bottom: 1.5rem;">
+                                <p style="font-size: 1.1rem; color: var(--text-main); margin-bottom: 1rem;">
+                                    <strong>1. I used to think</strong> <span style="display: inline-block; width: 50%; border-bottom: 1px solid var(--text-main); margin-bottom: -4px;"></span>
+                                </p>
+                                <div style="border-bottom: 1px solid var(--text-main); opacity: 0.3; height: 1.5rem; width: 100%;"></div>
+                                <div style="border-bottom: 1px solid var(--text-main); opacity: 0.3; height: 1.5rem; width: 100%;"></div>
+                            </div>
+
+                            <div class="callout" style="border-left-color: var(--accent-secondary); margin-bottom: 1.5rem;">
+                                <p style="font-size: 1.1rem; color: var(--text-main); margin-bottom: 1rem;">
+                                    <strong>2. Now I think</strong> <span style="display: inline-block; width: 55%; border-bottom: 1px solid var(--text-main); margin-bottom: -4px;"></span>
+                                </p>
+                                <div style="border-bottom: 1px solid var(--text-main); opacity: 0.3; height: 1.5rem; width: 100%;"></div>
+                                <div style="border-bottom: 1px solid var(--text-main); opacity: 0.3; height: 1.5rem; width: 100%;"></div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="card">
+                                <h3>Final Report Assembly:</h3>
+                                <p>Compile all parts into a single, neat report containing:</p>
+                                <ol style="margin-bottom: 0;">
+                                    <li>A Title Page (Project Title, Group Members, Section)</li>
+                                    <li>The Campus Redesign Visual Layout</li>
+                                    <li>The Geometric Construction Sheet</li>
+                                    <li>The Reasoning and Proof Sheet w/ Reflection</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SLIDE 10: Standards - Group Rubric -->
+                <section class="slide" data-title="Standards: Group Rubric">
+                    <h2>Standards: Group Rubric (30 Points)</h2>
+                    <h3>Pointing System for Performance Task #1: A. GROUP GRADE</h3>
+                    <p>Assesses the quality of the group's collective output and collaboration in producing the final project.</p>
+                    
+                    <div class="table-responsive no-click">
+                        <table>
+                            <colgroup>
+                                <col style="width: 16%;">
+                                <col style="width: 21%;">
+                                <col style="width: 21%;">
+                                <col style="width: 21%;">
+                                <col style="width: 21%;">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th>Criteria</th>
+                                    <th class="rubric-pts">5 Points</th>
+                                    <th class="rubric-pts">4 Points</th>
+                                    <th class="rubric-pts">3 Points</th>
+                                    <th class="rubric-pts">2 Points</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Application of Geometric Concepts</strong></td>
+                                    <td>All required geometric concepts are correctly represented, labeled, and integrated into the design.</td>
+                                    <td>Most concepts are correctly represented with minor errors.</td>
+                                    <td>Some concepts are represented but with noticeable errors or omissions.</td>
+                                    <td>Few required concepts are present or correctly shown.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Accuracy of Mathematical Content</strong></td>
+                                    <td>Geometric relationships, labels, and representations are mathematically accurate throughout the project.</td>
+                                    <td>Minor mathematical inaccuracies are present.</td>
+                                    <td>Several inaccuracies affect clarity or correctness.</td>
+                                    <td>Major inaccuracies are evident throughout the project.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Creativity and Practicality of Design</strong></td>
+                                    <td>Design is highly creative, realistic, and effectively addresses the needs of the campus area.</td>
+                                    <td>Design is practical and shows some creativity.</td>
+                                    <td>Design addresses the need but lacks originality or practicality.</td>
+                                    <td>Design is unrealistic, unclear, or does not adequately address the identified need.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Visual Organization and Presentation</strong></td>
+                                    <td>The layout is exceptionally neat, organized, visually appealing, and easy to interpret.</td>
+                                    <td>The layout is organized and readable with minor issues.</td>
+                                    <td>The layout is somewhat disorganized or difficult to follow.</td>
+                                    <td>The layout is poorly organized and difficult to understand.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Completeness of Required Components</strong></td>
+                                    <td>All required components and project requirements are fully completed.</td>
+                                    <td>One minor requirement is missing or incomplete.</td>
+                                    <td>Multiple requirements are incomplete.</td>
+                                    <td>Several major requirements are missing.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Quality of Group Collaboration and Preparation</strong></td>
+                                    <td>Evidence of strong teamwork, shared responsibility, and thorough preparation is clearly demonstrated.</td>
+                                    <td>Most members contributed and preparation is evident.</td>
+                                    <td>Uneven participation or limited preparation is evident.</td>
+                                    <td>Little evidence of collaboration or preparation.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- SLIDE 11: Standards - Individual Rubric 1 -->
+                <section class="slide" data-title="Standards: Indiv. Visual Layout">
+                    <h2>Standards: Individual Rubric - Visual Layout</h2>
+                    <h3>B. INDIVIDUAL GRADE: 1. Proposed Campus Redesign Visual Layout (20 Points)</h3>
+                    
+                    <div class="table-responsive no-click">
+                        <table>
+                            <colgroup>
+                                <col style="width: 20%;">
+                                <col style="width: 20%;">
+                                <col style="width: 20%;">
+                                <col style="width: 20%;">
+                                <col style="width: 20%;">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th>Criteria</th>
+                                    <th class="rubric-pts">5 Points</th>
+                                    <th class="rubric-pts">4 Points</th>
+                                    <th class="rubric-pts">3 Points</th>
+                                    <th class="rubric-pts">2 Points</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Completeness of Design Features</strong></td>
+                                    <td>All required features and labels are included.</td>
+                                    <td>One minor feature missing.</td>
+                                    <td>Several features are missing.</td>
+                                    <td>Many required features are missing.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Use of Geometric Concepts</strong></td>
+                                    <td>Points, parallel lines, perpendicular lines, transversal, and angle relationships are correctly represented and labeled.</td>
+                                    <td>Minor labeling or representation errors.</td>
+                                    <td>Some concepts are incorrectly shown.</td>
+                                    <td>Concepts largely absent or incorrect.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Neatness and Visual Presentation</strong></td>
+                                    <td>The layout is exceptionally neat, colorful, and easy to understand.</td>
+                                    <td>Generally neat and readable.</td>
+                                    <td>Somewhat cluttered or difficult to read.</td>
+                                    <td>Poorly organized and difficult to interpret.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Accuracy of Geometric Notation and Labels</strong></td>
+                                    <td>All points, lines, and angles are correctly labeled using proper notation.</td>
+                                    <td>Minor notation errors.</td>
+                                    <td>Several notation errors.</td>
+                                    <td>Labels are mostly missing or incorrect.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- SLIDE 12: Standards - Individual Rubric 2 -->
+                <section class="slide" data-title="Standards: Indiv. Construction">
+                    <h2>Standards: Individual Rubric - Construction</h2>
+                    <h3>B. INDIVIDUAL GRADE: 2. Geometric Construction Analysis (20 Points)</h3>
+                    
+                    <div class="table-responsive no-click">
+                        <table>
+                            <colgroup>
+                                <col style="width: 20%;">
+                                <col style="width: 20%;">
+                                <col style="width: 20%;">
+                                <col style="width: 20%;">
+                                <col style="width: 20%;">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th>Criteria</th>
+                                    <th class="rubric-pts">5 Points</th>
+                                    <th class="rubric-pts">4 Points</th>
+                                    <th class="rubric-pts">3 Points</th>
+                                    <th class="rubric-pts">2 Points</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Construction of Points and Parallel Lines</strong></td>
+                                    <td>Construction is correct and clearly explained.</td>
+                                    <td>Minor procedural errors.</td>
+                                    <td>Incomplete explanation.</td>
+                                    <td>Incorrect or missing construction.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Construction of Perpendicular Lines</strong></td>
+                                    <td>Construction is correct and clearly explained.</td>
+                                    <td>Minor procedural errors.</td>
+                                    <td>Incomplete explanation.</td>
+                                    <td>Incorrect or missing construction.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Connection of Constructions to Design</strong></td>
+                                    <td>Clearly explains how constructions were applied in the redesign.</td>
+                                    <td>The explanation is mostly clear.</td>
+                                    <td>Limited connection made.</td>
+                                    <td>No meaningful connection.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Mathematical Accuracy and Justification</strong></td>
+                                    <td>All explanations demonstrate correct geometric reasoning.</td>
+                                    <td>Minor reasoning errors.</td>
+                                    <td>Several reasoning errors.</td>
+                                    <td>Reasoning is largely incorrect or absent.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- SLIDE 13: Standards - Individual Rubric 3 -->
+                <section class="slide" data-title="Standards: Indiv. Reasoning & Proof">
+                    <h2>Standards: Individual Rubric - Reasoning & Proof</h2>
+                    <h3>B. INDIVIDUAL GRADE: 3. Reasoning and Proof (20 Points)</h3>
+                    
+                    <div class="table-responsive no-click">
+                        <table>
+                            <colgroup>
+                                <col style="width: 20%;">
+                                <col style="width: 20%;">
+                                <col style="width: 20%;">
+                                <col style="width: 20%;">
+                                <col style="width: 20%;">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th>Criteria</th>
+                                    <th class="rubric-pts">5 Points</th>
+                                    <th class="rubric-pts">4 Points</th>
+                                    <th class="rubric-pts">3 Points</th>
+                                    <th class="rubric-pts">2 Points</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Identification of Problem and Need for Redesign</strong></td>
+                                    <td>Clearly identifies observed issues and supports them with evidence.</td>
+                                    <td>Issues identified with adequate support.</td>
+                                    <td>Limited evidence provided.</td>
+                                    <td>Issues poorly identified or unsupported.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Justification of Proposed Design</strong></td>
+                                    <td>Strong explanation of how the redesign improves the area using geometric concepts.</td>
+                                    <td>Adequate explanation with minor gaps.</td>
+                                    <td>The explanation lacks detail.</td>
+                                    <td>Justification is weak or absent.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Mathematical Proof</strong></td>
+                                    <td>Proof is complete, logical, and mathematically correct.</td>
+                                    <td>Minor errors that do not affect overall validity.</td>
+                                    <td>Significant gaps in reasoning.</td>
+                                    <td>Proof is incomplete or incorrect.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Use of Evidence and Reasoning</strong></td>
+                                    <td>Observations, measurements, and geometric reasoning strongly support claims.</td>
+                                    <td>Evidence generally supports claims.</td>
+                                    <td>Limited supporting evidence.</td>
+                                    <td>Little or no supporting evidence.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+                
+                <!-- SLIDE 14: Sample Layout -->
+                <section class="slide" data-title="Sample Visual Layout">
+                    <h2>SAMPLE VISUAL LAYOUT</h2>
+                    <p>Your layout should clearly map out zones using geometric lines, transversal pathways, and properly denoted angles just like the sample below.</p>
+                    
+                    <div style="width: 100%; text-align: center; margin: 2rem 0;">
+                        <!-- Custom Image Replaces Placeholder -->
+                        <img src="layout.jpg" alt="Sample Visual Layout" style="max-width: 100%; max-height: 500px; border-radius: 12px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); object-fit: contain;">
+                    </div>
+                    
+                    <div class="card" style="text-align: center; max-width: 600px; margin: 0 auto;">
+                        <h3 style="color: var(--accent-primary); margin-bottom: 0.5rem;">Good Luck, Junior Planners!</h3>
+                        <p style="margin-bottom: 0;">Apply your Geometry skills to build a better campus.</p>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+
+        <!-- Bottom Navigation Controls -->
+        <footer class="bottom-ui no-click">
+            <button class="nav-btn" id="btnPrev" aria-label="Previous Slide">
+                <i class="fa-solid fa-chevron-left"></i> Prev
+            </button>
+            <div class="page-counter" id="pageCounter">1 / 14</div>
+            <button class="nav-btn" id="btnNext" aria-label="Next Slide">
+                Next <i class="fa-solid fa-chevron-right"></i>
+            </button>
+        </footer>
+
+    </div>
+
+    <!-- Application Logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // State
+            let currentSlide = 0;
+            const slides = document.querySelectorAll('.slide');
+            const totalSlides = slides.length;
+            let hideUITimeout;
+            
+            // DOM Elements
+            const btnPrev = document.getElementById('btnPrev');
+            const btnNext = document.getElementById('btnNext');
+            const pageCounter = document.getElementById('pageCounter');
+            const progressBar = document.getElementById('progressBar');
+            const slideWrapper = document.getElementById('slideWrapper');
+            
+            // Menu Elements
+            const menuToggle = document.getElementById('menuToggle');
+            const closeMenu = document.getElementById('closeMenu');
+            const sidebar = document.getElementById('sidebar');
+            const menuOverlay = document.getElementById('menuOverlay');
+            const tocList = document.getElementById('tocList');
+            
+            // Top UI Elements
+            const themeToggle = document.getElementById('themeToggle');
+            const fontSlider = document.getElementById('fontSlider');
+            const appBody = document.body;
+
+            // ==========================================
+            // Initialization
+            // ==========================================
+            function init() {
+                generateTOC();
+                updateSlide();
+                setupTheme();
+                setupAutoHidingUI();
+            }
+
+            // ==========================================
+            // Slide Navigation Logic
+            // ==========================================
+            function updateSlide() {
+                // Bounds check
+                if (currentSlide < 0) currentSlide = 0;
+                if (currentSlide >= totalSlides) currentSlide = totalSlides - 1;
+
+                // Update active classes
+                slides.forEach((slide, index) => {
+                    if (index === currentSlide) {
+                        slide.classList.add('active');
+                        // Reset scroll position of slide
+                        slide.scrollTop = 0; 
+                    } else {
+                        slide.classList.remove('active');
+                    }
+                });
+
+                // Update buttons
+                btnPrev.disabled = currentSlide === 0;
+                btnNext.disabled = currentSlide === totalSlides - 1;
+
+                // Update text counter
+                pageCounter.textContent = `${currentSlide + 1} / ${totalSlides}`;
+
+                // Update Progress bar
+                const progress = ((currentSlide) / (totalSlides - 1)) * 100;
+                progressBar.style.width = `${progress}%`;
+
+                // Update TOC highlights
+                updateTOCHighlight();
+            }
+
+            function goNext() {
+                if (currentSlide < totalSlides - 1) {
+                    currentSlide++;
+                    updateSlide();
+                }
+            }
+
+            function goPrev() {
+                if (currentSlide > 0) {
+                    currentSlide--;
+                    updateSlide();
+                }
+            }
+
+            // Button Event Listeners
+            btnNext.addEventListener('click', (e) => { e.stopPropagation(); goNext(); });
+            btnPrev.addEventListener('click', (e) => { e.stopPropagation(); goPrev(); });
+
+            // Keyboard Navigation
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight' || e.key === 'Space') {
+                    goNext();
+                } else if (e.key === 'ArrowLeft') {
+                    goPrev();
+                }
+            });
+
+            // Click-to-Navigate (Desktop)
+            slideWrapper.addEventListener('click', (e) => {
+                // Disable if window is mobile/tablet size
+                if (window.innerWidth <= 768) return;
+
+                // Disable if user is selecting text
+                if (window.getSelection().toString().length > 0) return;
+
+                // Disable if clicking on an interactive element or table (no-click class)
+                if (e.target.closest('button, a, input, .no-click, .callout')) return;
+
+                const clickX = e.clientX;
+                const width = window.innerWidth;
+
+                if (clickX < width * 0.33) {
+                    goPrev();
+                } else if (clickX > width * 0.66) {
+                    goNext();
+                }
+            });
+
+            // ==========================================
+            // Sidebar (Table of Contents) Logic
+            // ==========================================
+            function generateTOC() {
+                slides.forEach((slide, index) => {
+                    const title = slide.getAttribute('data-title') || `Slide ${index + 1}`;
+                    const li = document.createElement('li');
+                    li.className = 'toc-item';
+                    li.textContent = title;
+                    li.addEventListener('click', () => {
+                        currentSlide = index;
+                        updateSlide();
+                        toggleMenu(false);
+                    });
+                    tocList.appendChild(li);
+                });
+            }
+
+            function updateTOCHighlight() {
+                const items = tocList.querySelectorAll('.toc-item');
+                items.forEach((item, index) => {
+                    if (index === currentSlide) {
+                        item.classList.add('active');
+                        // Scroll menu to show active item
+                        item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    } else {
+                        item.classList.remove('active');
+                    }
+                });
+            }
+
+            function toggleMenu(forceState) {
+                const isActive = typeof forceState === 'boolean' ? forceState : !sidebar.classList.contains('active');
+                if (isActive) {
+                    sidebar.classList.add('active');
+                    menuOverlay.classList.add('active');
+                } else {
+                    sidebar.classList.remove('active');
+                    menuOverlay.classList.remove('active');
+                }
+            }
+
+            menuToggle.addEventListener('click', (e) => { e.stopPropagation(); toggleMenu(); });
+            closeMenu.addEventListener('click', () => toggleMenu(false));
+            menuOverlay.addEventListener('click', () => toggleMenu(false));
+
+            // ==========================================
+            // UI Controls (Theme & Text Size)
+            // ==========================================
+            function setupTheme() {
+                // Check local storage or system preference
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme) {
+                    document.documentElement.setAttribute('data-theme', savedTheme);
+                } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                }
+                updateThemeIcon();
+            }
+
+            function updateThemeIcon() {
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                themeToggle.innerHTML = isDark ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+            }
+
+            themeToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                updateThemeIcon();
+            });
+
+            fontSlider.addEventListener('input', (e) => {
+                const scale = e.target.value;
+                document.documentElement.style.setProperty('--text-scale', scale);
+            });
+
+            // Prevent clicks inside text popover from closing or triggering nav
+            document.querySelector('.text-size-container').addEventListener('click', e => e.stopPropagation());
+
+            // ==========================================
+            // Auto-Hiding UI Logic (Desktop Only)
+            // ==========================================
+            function setupAutoHidingUI() {
+                const resetTimer = () => {
+                    // Remove hidden class
+                    appBody.classList.remove('ui-hidden');
+                    
+                    // Clear existing timer
+                    clearTimeout(hideUITimeout);
+
+                    // Only apply auto-hide on desktop
+                    if (window.innerWidth > 768) {
+                        hideUITimeout = setTimeout(() => {
+                            // Don't hide if menu is open or hovering over controls
+                            if (!sidebar.classList.contains('active') && !document.querySelector('.top-ui:hover') && !document.querySelector('.bottom-ui:hover')) {
+                                appBody.classList.add('ui-hidden');
+                            }
+                        }, 3000); // 3 seconds inactivity
+                    }
+                };
+
+                // Triggers to reset timer
+                window.addEventListener('mousemove', resetTimer);
+                window.addEventListener('mousedown', resetTimer);
+                window.addEventListener('keydown', resetTimer);
+                window.addEventListener('resize', resetTimer);
+
+                // Initial call
+                resetTimer();
+            }
+
+            // Run Init
+            init();
+        });
+    </script>
+</body>
+</html>
